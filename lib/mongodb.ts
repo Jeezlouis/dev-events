@@ -9,7 +9,7 @@ interface MongooseCache {
 // Extend the global namespace to include our mongoose cache
 declare global {
   // eslint-disable-next-line no-var
-  var mongoose: MongooseCache | undefined;
+  var mongooseCache: MongooseCache | undefined;
 }
 
 // Retrieve MongoDB URI from environment variables
@@ -25,12 +25,16 @@ if (!MONGODB_URI) {
  * Global cache to maintain a single MongoDB connection across hot reloads in development.
  * In production, this prevents multiple connections when serverless functions are invoked.
  */
-let cached: MongooseCache = global.mongoose || { conn: null, promise: null };
+const globalForMongoose = globalThis as typeof globalThis & {
+  mongooseCache?: MongooseCache;
+};
 
-if (!global.mongoose) {
-  global.mongoose = cached;
+let cached: MongooseCache =
+  globalForMongoose.mongooseCache || { conn: null, promise: null };
+
+if (!globalForMongoose.mongooseCache) {
+  globalForMongoose.mongooseCache = cached;
 }
-
 /**
  * Establishes and returns a cached MongoDB connection using Mongoose.
  * Reuses existing connections to prevent connection pool exhaustion.
