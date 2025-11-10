@@ -1,7 +1,7 @@
 import EventCard from '@/components/EventCard'
 import ExploreBtn from '@/components/ExploreBtn'
+import { IEvent } from '@/database';
 import { cacheLife } from 'next/cache';
-import { events, Event } from '@/lib/constants';
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 
   (process.env.NODE_ENV === 'production' 
@@ -11,23 +11,23 @@ const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ||
 const page = async () => {
   "use cache"
   cacheLife('hours')
-  // let events: IEvent[] = []
+  let events: IEvent[] = []
   
-  // try {
-  //   const response = await fetch(`${BASE_URL}/api/events`, {
-  //     cache: 'no-store'
-  //   })
+  try {
+    const response = await fetch(`${BASE_URL}/api/events`, {
+      cache: 'no-store'
+    })
     
-  //   if (!response.ok) {
-  //     throw new Error(`Failed to fetch events: ${response.status}`)
-  //   }
+    if (!response.ok) {
+      throw new Error(`Failed to fetch events: ${response.status}`)
+    }
     
-  //   const data = await response.json()
-  //   events = data.events || []
-  // } catch (error) {
-  //   console.error('Error fetching events:', error)
-  //   // Return empty array as fallback - page will still render
-  // }
+    const data = await response.json()
+    events = data.events || []
+  } catch (error) {
+    console.error('Error fetching events:', error)
+    // Return empty array as fallback - page will still render
+  }
 
   return (
     <section>
@@ -40,7 +40,7 @@ const page = async () => {
         <h2>Fetured Events</h2>
 
         <ul className='events'>
-          {events && events.length > 0 && events.map((event: Event) => (
+          {events && events.length > 0 && events.map((event: IEvent) => (
             <li key={event.title} className='list-none'>
               <EventCard {...event} />
             </li>
