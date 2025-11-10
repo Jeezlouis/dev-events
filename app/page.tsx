@@ -3,10 +3,26 @@ import ExploreBtn from '@/components/ExploreBtn'
 import { IEvent } from '@/database';
 import { cacheLife } from 'next/cache';
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 
-  (process.env.NODE_ENV === 'production' 
-    ? (() => { throw new Error('NEXT_PUBLIC_BASE_URL is required in production') })()
-    : 'http://localhost:3000')
+const getBaseUrl = () => {
+  // If BASE_URL is set, use it (ensure it has protocol)
+  if (process.env.NEXT_PUBLIC_BASE_URL) {
+    const url = process.env.NEXT_PUBLIC_BASE_URL
+    return url.startsWith('http') ? url : `https://${url}`
+  }
+  
+  // In production, use Vercel URL if available
+  if (process.env.NODE_ENV === 'production') {
+    if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+      return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+    }
+    throw new Error('NEXT_PUBLIC_BASE_URL is required in production')
+  }
+  
+  // Default to localhost in development
+  return 'http://localhost:3000'
+}
+
+const BASE_URL = getBaseUrl()
 
 const page = async () => {
   "use cache"
