@@ -47,7 +47,7 @@ async function connectDB(): Promise<typeof mongoose> {
     return cached.conn;
   }
 
-  // nding connection promise if one exists
+  // Reuse pending connection promise if one exists
   if (!cached.promise) {
     const opts = {
       bufferCommands: false, // Disable Mongoose buffering to fail fast if not connected
