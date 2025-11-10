@@ -5,21 +5,13 @@ import BookEvent from "@/components/BookEvent"
 import { IEvent } from "@/database";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 import EventCard from "@/components/EventCard";
+import { cacheLife } from "next/cache";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 
   (process.env.NODE_ENV === 'production' 
     ? (() => { throw new Error('NEXT_PUBLIC_BASE_URL is required in production') })()
     : 'http://localhost:3000')
 
-// Helper function to safely parse JSON
-const safeJsonParse = <T,>(value: unknown, fallback: T): T => {
-  if (!value || typeof value !== 'string') return fallback
-  try {
-    return JSON.parse(value)
-  } catch {
-    return fallback
-  }
-}
 
 const EventDetailItem = ({ icon, alt, label }: { icon: string, alt: string, label: string }) => (
   <div className="flex-row-gap-2 items-center">
@@ -47,7 +39,10 @@ const EventTags = ({tags} : { tags: string[] }) => (
   </div>
 )
 
-const EventContent = async ({ slug }: { slug: string }) => {
+const EventDetailsPage = async ({ params }: {params: Promise<{ slug: string }>}) => {
+  "use cache"
+  cacheLife('hours')
+  const { slug } = await params
   try {
     const response = await fetch(`${BASE_URL}/api/events/${slug}`, {
       cache: 'no-store'
@@ -118,7 +113,7 @@ const EventContent = async ({ slug }: { slug: string }) => {
                   <p className="text-sm">Be the first to book your !spot</p>
                 )}
 
-                <BookEvent />
+                <BookEvent eventId={event._id} slug={event.slug} />
               </div>
           </aside>
       </div>
@@ -137,16 +132,6 @@ const EventContent = async ({ slug }: { slug: string }) => {
     console.error('Error fetching event:', error)
     throw error
   }
-}
-
-const EventDetailsPage = async ({ params }: {params: Promise<{ slug: string }>}) => {
-  const { slug } = await params
-  
-  return (
-    <Suspense fallback={<div>Loading event details...</div>}>
-      <EventContent slug={slug} />
-    </Suspense>
-  )
 }
 
 export default EventDetailsPage
